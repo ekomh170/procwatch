@@ -21,8 +21,8 @@ On that second pass, the deliberate deviations from Material 3 were left alone. 
 dynamic colour, monospace throughout, 4dp radii and flat surfaces are a stated design position
 — `Theme.kt` calls the app an instrument, not a settings screen — and conformance for its own
 sake would cost the identity without making anything easier to use. What was fixed is the part
-that hurts regardless of aesthetic: contrast, text size, touch targets and screen reader
-support.
+that hurts regardless of aesthetic: contrast, text size, touch targets, screen reader support —
+and the one place where the phone's own light/dark setting still leaked into a dark-only app.
 
 ### Added
 
@@ -32,6 +32,15 @@ support.
   the figure beside the meter does not make a screen reader read it twice. (`f371f76`)
 
 ### Fixed
+
+- **The phone's light mode made the status bar icons disappear.** `enableEdgeToEdge()` with no
+  arguments defaults to `SystemBarStyle.auto`, which reads `Configuration.UI_MODE_NIGHT_MASK` —
+  the system dark mode setting, not the app's theme. ProcWatch is always dark, so launching it
+  with the phone in light mode made the library assume a light background and draw _dark_ status
+  bar icons over #0E1116; the clock, battery and signal were all but invisible. Because `uiMode`
+  is in the activity's `configChanges`, nothing recreated the activity, so the state was sticky:
+  toggling the system theme while the app was open did not help, only closing and reopening it.
+  `SystemBarStyle.dark` now states the fact instead of inferring it. (`87250e1`)
 
 - **The dimmest text failed WCAG AA contrast.** `TextFaint` #5C6673 measured 3.0:1 against
   Surface and 3.2:1 against Background, where AA asks 4.5:1 for body text — and it carries the
