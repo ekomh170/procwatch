@@ -26,6 +26,15 @@ and the one place where the phone's own light/dark setting still leaked into a d
 
 ### Added
 
+- **Release builds can be signed, and therefore installed.** `assembleRelease` had no
+  `signingConfig`, so it produced an unsigned APK that Android refuses to install — the only
+  installable output was the debug build, which is `debuggable`, a poor default for an app whose
+  purpose is running privileged shell commands. Signing now reads from `keystore.properties` in
+  the project root, gitignored along with `*.jks` and `*.keystore`. When that file is absent the
+  config is not created and the build behaves exactly as before, so a fresh clone still builds
+  debug with no setup. `keystore.properties.example` documents the keys and the `keytool`
+  invocation. (`b227e76`)
+
 - **The memory meter is announced to screen readers.** `SegmentMeter` is a bare `Canvas`, so
   TalkBack had nothing to say about the headline reading on the dashboard. It now takes an
   optional label and exposes `"<label>, N percent"`. Optional, so a caller that already prints
@@ -136,14 +145,18 @@ and the one place where the phone's own light/dark setting still leaked into a d
 
 ### Verification status
 
-**Not yet compiled or tested.** These changes were reviewed by hand on a machine with no Gradle
-and no Android SDK. Before trusting them on the phone:
+**Not yet compiled or tested.** These changes were reviewed by hand on a machine with no Gradle,
+no Android SDK, no Gradle wrapper, and a JDK too new for Gradle 8.9 to run on. Before trusting
+any of it on the phone, open the project in Android Studio to generate the wrapper and
+`local.properties`, then:
 
 ```bash
-gradle wrapper --gradle-version 8.9
 ./gradlew test           # 8 parser tests, 3 of them new
 ./gradlew assembleDebug
 ```
+
+Expect the first compile to surface errors. The likeliest candidates are the new imports
+(`SystemBarStyle`, `MetaStyle`) and `refresh()`, described below.
 
 The likeliest thing to catch: `refresh()` is now an expression body
 (`= refreshLock.withLock { … }`), the only structural change to a function signature.
