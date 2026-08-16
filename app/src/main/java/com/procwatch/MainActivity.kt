@@ -2,6 +2,7 @@ package com.procwatch
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -49,7 +50,20 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
+        // The no-argument enableEdgeToEdge() picks system bar icon colour from the phone's
+        // dark mode setting rather than from this app's theme. ProcWatch is always dark, so
+        // on a phone in light mode the status bar drew dark icons over a near-black
+        // background and the clock, battery and signal all but vanished. Worse, uiMode is in
+        // this activity's configChanges, so nothing recreates it — the icons stayed wrong
+        // until the app was closed and reopened.
+        //
+        // dark() states the fact instead of inferring it. A transparent scrim is safe here
+        // because the bottom NavigationBar paints Panel.Surface behind the system bar.
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+        )
 
         // Shizuku's binder can arrive or die at any moment; the listeners keep the whole UI
         // honest about which tier is actually live.

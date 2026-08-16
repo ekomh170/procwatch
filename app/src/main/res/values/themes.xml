@@ -1,4 +1,17 @@
 <resources>
+    <!--
+        No -night variant on purpose. This file has no qualifier, so it applies in both
+        system themes, which is what a dark-only app wants: nothing here should follow the
+        phone's light/dark setting.
+
+        The parent is the platform's dark Material theme, not .Light, so no light attribute
+        leaks in from underneath.
+
+        windowBackground is the one that earns its keep — it paints the window at launch,
+        before Compose draws anything. statusBarColor and navigationBarColor only cover the
+        gap before enableEdgeToEdge() runs in onCreate, which then overrides both; on API 35
+        they are deprecated outright. Kept so the launch frame cannot flash a lighter bar.
+    -->
     <style name="Theme.ProcWatch" parent="android:Theme.Material.NoActionBar">
         <item name="android:statusBarColor">#0E1116</item>
         <item name="android:navigationBarColor">#0E1116</item>
