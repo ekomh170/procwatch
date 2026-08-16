@@ -103,7 +103,23 @@ if (-not $JavaHome) { throw "Could not find bin\java.exe under $JdkDir" }
 
 $env:JAVA_HOME = $JavaHome
 $env:Path = "$JavaHome\bin;$env:Path"
-Write-Good ((& "$JavaHome\bin\java.exe" -version 2>&1 | Select-Object -First 1) -replace '"', '')
+
+# The version comes from the JDK's own release file rather than `java -version`.
+#
+# `java -version` writes to stderr, and Windows PowerShell 5.1 wraps a native command's
+# redirected stderr in ErrorRecords — so `2>&1` here turns a healthy JDK into a terminating
+# NativeCommandError under $ErrorActionPreference = 'Stop'. Never redirect a native exe's
+# stderr in this script; check $LASTEXITCODE instead.
+$JavaVersion = 'unknown'
+$ReleaseFile = Join-Path $JavaHome 'release'
+if (Test-Path $ReleaseFile) {
+    $VersionLine = @(Get-Content $ReleaseFile) -match '^JAVA_VERSION='
+    if ($VersionLine) {
+        $JavaVersion = ($VersionLine | Select-Object -First 1) -replace '^JAVA_VERSION=|"', ''
+    }
+}
+Write-Good "JDK $JavaVersion"
+Write-Note $JavaHome
 
 # ---------------------------------------------------------------------------------------------
 Write-Step "Android SDK command-line tools"
