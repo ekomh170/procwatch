@@ -13,10 +13,37 @@ traced back to its diff.
 
 ## [Unreleased]
 
-First pass over the findings from a full read of the codebase. No features were added; every
-entry below is a correctness or cost fix in code that already shipped in 0.1.0.
+Two review passes over 0.1.0, no new features. The first was a full read of the codebase for
+correctness and cost; the second checked the UI against Material 3 and the Android
+accessibility guidelines.
+
+On that second pass, the deliberate deviations from Material 3 were left alone. Dark-only, no
+dynamic colour, monospace throughout, 4dp radii and flat surfaces are a stated design position
+— `Theme.kt` calls the app an instrument, not a settings screen — and conformance for its own
+sake would cost the identity without making anything easier to use. What was fixed is the part
+that hurts regardless of aesthetic: contrast, text size, touch targets and screen reader
+support.
+
+### Added
+
+- **The memory meter is announced to screen readers.** `SegmentMeter` is a bare `Canvas`, so
+  TalkBack had nothing to say about the headline reading on the dashboard. It now takes an
+  optional label and exposes `"<label>, N percent"`. Optional, so a caller that already prints
+  the figure beside the meter does not make a screen reader read it twice. (`f371f76`)
 
 ### Fixed
+
+- **The dimmest text failed WCAG AA contrast.** `TextFaint` #5C6673 measured 3.0:1 against
+  Surface and 3.2:1 against Background, where AA asks 4.5:1 for body text — and it carries the
+  app list's second line, package names, log timestamps and empty-state copy. #7A8593 measures
+  4.6:1 and 5.0:1 with the same cool grey cast, so nothing about the look changes. (`9996a56`)
+
+- **Three controls were below the 48dp minimum touch target.** "CLEAR" in the activity log was
+  roughly 14dp — a plain `Text` with a clickable modifier, for an action that wipes the entire
+  log, which is dangerous in both directions. "Show all apps" in the empty state was about 34dp
+  and styled as a button without being one. The keep-running rows measured about 44dp. All
+  three now carry a real target and, for the two that became buttons, the button role for
+  screen readers. (`673a362`)
 
 - **Per-app memory undercounted multi-process apps.** `dumpsys meminfo <pkg>` prints one block
   per process, so an app running a `:remote` or `:push` process has several `TOTAL PSS` figures.
@@ -43,6 +70,17 @@ entry below is a correctness or cost fix in code that already shipped in 0.1.0.
   package protected since the last refresh could still be stopped. (`e63dbcd`)
 
 ### Changed
+
+- **The eyebrow style was doing two jobs and was too small for one of them.** `EyebrowStyle` at
+  10sp covered both short upper-case labels, where it works, and sentence-length secondary
+  content, where it sat below the readable floor and below the smallest role in the M3 type
+  scale. It moves to 11sp and keeps the label job. A new `MetaStyle` at 12sp takes the content
+  job — app list second line, package names, process table, log entries — and drops the letter
+  spacing, which helps one word and hurts a line of text. (`9996a56`, `14b8d6b`)
+
+- **Detail sheet button labels moved to `DataStyle`.** They were 10sp eyebrow text inside an
+  `OutlinedButton`, well under the M3 button label size and visibly smaller than the primary
+  buttons directly above them. (`14b8d6b`)
 
 - **Opening an app no longer runs a system-wide `dumpsys meminfo`.** The sheet used to dump the
   whole process table and discard every row but one. The refresh that populated the list already
@@ -84,6 +122,9 @@ entry below is a correctness or cost fix in code that already shipped in 0.1.0.
 - `PackageSource.launchIntentFor`, which had no callers. The one place that needs a launch intent
   asks `PackageManager` directly. (`6e7a7a2`)
 
+- `Panel.RowHeight`, a constant with no callers — `AppListRow` sizes itself from its content.
+  (`9996a56`)
+
 ### Verification status
 
 **Not yet compiled or tested.** These changes were reviewed by hand on a machine with no Gradle
@@ -97,6 +138,12 @@ gradle wrapper --gradle-version 8.9
 
 The likeliest thing to catch: `refresh()` is now an expression body
 (`= refreshLock.withLock { … }`), the only structural change to a function signature.
+
+The contrast figures above were computed from the WCAG relative-luminance formula, not sampled
+from a screenshot. They hold for text on `Surface` and `Background`; disabled controls draw
+`TextFaint` on `SurfaceRaised` at 4.1:1, which is exempt from the requirement but still an
+improvement on the 2.6:1 it was. Layout changes from the larger type and the 48dp floors have
+not been seen on a real screen yet.
 
 The `dumpsys` samples in `ShizukuParserTest` are still synthetic. Once Shizuku is connected,
 `adb shell dumpsys meminfo <multi-process-pkg>` on the real device is the fastest way to confirm
