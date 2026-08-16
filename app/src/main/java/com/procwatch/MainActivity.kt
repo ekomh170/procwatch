@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -119,7 +119,7 @@ private fun ProcWatchRoot(viewModel: MainViewModel) {
                             Icon(
                                 imageVector = when (tab) {
                                     Tab.DASHBOARD -> Icons.Default.Home
-                                    Tab.APPS -> Icons.Default.List
+                                    Tab.APPS -> Icons.AutoMirrored.Filled.List
                                     Tab.SETTINGS -> Icons.Default.Settings
                                 },
                                 contentDescription = tab.label
