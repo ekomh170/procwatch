@@ -10,17 +10,17 @@ Target device: **Poco X6 (HyperOS / Android 14)**. `minSdk 29`, `targetSdk 35`.
 
 Android does not let a normal app see other apps' processes. `getRunningAppProcesses()`, `getRunningServices()` and `/proc` were all closed off years ago. So ProcWatch is built in tiers, and it tells you which tier you are on instead of pretending.
 
-| | No permissions | + Usage Access | + Shizuku |
-|---|:---:|:---:|:---:|
-| Installed app list | ✅ | ✅ | ✅ |
-| Screen time, last used | ❌ | ✅ | ✅ |
-| Standby bucket | ❌ | ✅ | ✅ |
-| Storage breakdown | ❌ | ✅ | ✅ |
-| **Live process list** | ❌ | ❌ | ✅ |
-| **Per-app memory (PSS)** | ❌ | ❌ | ✅ |
-| **Real force stop** | ❌ | ❌ | ✅ |
-| Freeze / unfreeze app | ❌ | ❌ | ✅ |
-| Block background execution | ❌ | ❌ | ✅ |
+|                            | No permissions | + Usage Access | + Shizuku |
+| -------------------------- | :------------: | :------------: | :-------: |
+| Installed app list         |       ✅       |       ✅       |    ✅     |
+| Screen time, last used     |       ❌       |       ✅       |    ✅     |
+| Standby bucket             |       ❌       |       ✅       |    ✅     |
+| Storage breakdown          |       ❌       |       ✅       |    ✅     |
+| **Live process list**      |       ❌       |       ❌       |    ✅     |
+| **Per-app memory (PSS)**   |       ❌       |       ❌       |    ✅     |
+| **Real force stop**        |       ❌       |       ❌       |    ✅     |
+| Freeze / unfreeze app      |       ❌       |       ❌       |    ✅     |
+| Block background execution |       ❌       |       ❌       |    ✅     |
 
 Without Shizuku the only kill available is `killBackgroundProcesses()`, which reclaims cached processes and nothing else — the app comes straight back. The UI calls that controller "Soft kill" rather than dressing it up as a force stop.
 
@@ -51,7 +51,7 @@ Run the parser tests with `./gradlew test`.
 **2. Shizuku** — install it, then:
 
 - Settings → About phone → tap Build number 7 times
-- Developer options → enable **USB debugging** *and* **USB debugging (Security settings)** (Xiaomi splits these)
+- Developer options → enable **USB debugging** _and_ **USB debugging (Security settings)** (Xiaomi splits these)
 - Developer options → enable **Wireless debugging**
 - Open Shizuku → Start via Wireless debugging → pair with the code
 - Back in ProcWatch: Setup tab → Authorise ProcWatch
@@ -71,6 +71,8 @@ privileged/   AppController interface + Shizuku and fallback implementations.
 data/         Data sources (packages, usage, system stats), whitelist, action log,
               and the repository that joins them.
 ui/           Compose screens. One MainViewModel backs all three tabs.
+docs/         KONSEP.md is the design document this was built from (Indonesian).
+              CHANGELOG.md records what changed since, and why.
 ```
 
 The important seam is `privileged/AppController.kt`. Nothing outside that package knows Shizuku exists. Adding a root backend later means writing one more implementation and adding it to the list in `AppContainer` — nothing else changes.
