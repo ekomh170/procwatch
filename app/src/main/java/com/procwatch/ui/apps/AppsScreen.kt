@@ -1,6 +1,5 @@
 package com.procwatch.ui.apps
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +22,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
@@ -298,15 +299,15 @@ private fun EmptyState(filter: AppFilter, canSeeProcesses: Boolean, onShowAll: (
             )
             if (filter != AppFilter.ALL) {
                 Spacer(Modifier.height(14.dp))
-                Text(
-                    "Show all apps",
-                    style = DataStyle,
-                    color = Panel.Signal,
-                    modifier = Modifier
-                        .background(Panel.Surface)
-                        .clickable(onClick = onShowAll)
-                        .padding(horizontal = 14.dp, vertical = 8.dp)
-                )
+                Button(
+                    onClick = onShowAll,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Panel.Surface,
+                        contentColor = Panel.Signal
+                    )
+                ) {
+                    Text("Show all apps", style = DataStyle)
+                }
             }
         }
     }
