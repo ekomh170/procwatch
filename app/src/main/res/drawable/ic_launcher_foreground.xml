@@ -1,0 +1,11 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- A rack meter: four stacked bars of decreasing load. -->
+    <path android:fillColor="#FFB454" android:pathData="M32,38h44v7h-44z" />
+    <path android:fillColor="#FFB454" android:pathData="M32,50h32v7h-32z" />
+    <path android:fillColor="#5C6673" android:pathData="M32,62h22v7h-22z" />
+    <path android:fillColor="#5C6673" android:pathData="M32,74h12v7h-12z" />
+</vector>
