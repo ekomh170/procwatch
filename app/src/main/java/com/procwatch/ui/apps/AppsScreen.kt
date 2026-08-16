@@ -51,6 +51,7 @@ import com.procwatch.ui.components.AppIcon
 import com.procwatch.ui.components.StatusRail
 import com.procwatch.ui.theme.DataStyle
 import com.procwatch.ui.theme.EyebrowStyle
+import com.procwatch.ui.theme.MetaStyle
 import com.procwatch.ui.theme.Panel
 import com.procwatch.ui.theme.bucketColor
 
@@ -237,7 +238,7 @@ private fun AppListRow(row: AppRow, showMemory: Boolean, onClick: () -> Unit) {
                             append(" today")
                         }
                     },
-                    style = EyebrowStyle,
+                    style = MetaStyle,
                     color = Panel.TextFaint,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -254,7 +255,7 @@ private fun AppListRow(row: AppRow, showMemory: Boolean, onClick: () -> Unit) {
                 )
                 Text(
                     if (row.processCount > 0) "${row.processCount} proc" else "idle",
-                    style = EyebrowStyle,
+                    style = MetaStyle,
                     color = Panel.TextFaint
                 )
             }

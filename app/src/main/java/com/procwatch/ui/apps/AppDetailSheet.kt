@@ -43,6 +43,7 @@ import com.procwatch.ui.components.ReadoutRow
 import com.procwatch.ui.components.StatusChip
 import com.procwatch.ui.theme.DataStyle
 import com.procwatch.ui.theme.EyebrowStyle
+import com.procwatch.ui.theme.MetaStyle
 import com.procwatch.ui.theme.Panel
 import com.procwatch.ui.theme.bucketColor
 
@@ -78,7 +79,7 @@ fun AppDetailSheet(viewModel: MainViewModel) {
                     Text(row.meta.label, style = DataStyle, color = Panel.TextPrimary, maxLines = 2)
                     Text(
                         row.packageName,
-                        style = EyebrowStyle,
+                        style = MetaStyle,
                         color = Panel.TextFaint,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -134,13 +135,13 @@ fun AppDetailSheet(viewModel: MainViewModel) {
                     Row(Modifier.fillMaxWidth().padding(vertical = 3.dp)) {
                         Text(
                             process.pid.toString().padStart(6),
-                            style = EyebrowStyle,
+                            style = MetaStyle,
                             color = Panel.TextFaint
                         )
                         Spacer(Modifier.width(10.dp))
                         Text(
                             process.name,
-                            style = EyebrowStyle,
+                            style = MetaStyle,
                             color = Panel.TextSecondary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -148,7 +149,7 @@ fun AppDetailSheet(viewModel: MainViewModel) {
                         )
                         Text(
                             Format.kb(process.pssKb),
-                            style = EyebrowStyle,
+                            style = MetaStyle,
                             color = Panel.Signal
                         )
                     }
@@ -183,7 +184,7 @@ fun AppDetailSheet(viewModel: MainViewModel) {
                 ) {
                     Text(
                         if (row.isWhitelisted) "Stop protecting" else "Keep running",
-                        style = EyebrowStyle
+                        style = DataStyle
                     )
                 }
                 OutlinedButton(
@@ -196,7 +197,7 @@ fun AppDetailSheet(viewModel: MainViewModel) {
                     },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("App info", style = EyebrowStyle)
+                    Text("App info", style = DataStyle)
                 }
             }
 
@@ -209,7 +210,7 @@ fun AppDetailSheet(viewModel: MainViewModel) {
                             enabled = !row.isWhitelisted,
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text(if (row.meta.isEnabled) "Freeze" else "Unfreeze", style = EyebrowStyle)
+                            Text(if (row.meta.isEnabled) "Freeze" else "Unfreeze", style = DataStyle)
                         }
                     }
                     if (Capability.REVOKE_BACKGROUND in capabilities) {
@@ -218,7 +219,7 @@ fun AppDetailSheet(viewModel: MainViewModel) {
                             enabled = !row.isWhitelisted,
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Block background", style = EyebrowStyle)
+                            Text("Block background", style = DataStyle)
                         }
                     }
                 }
@@ -226,7 +227,7 @@ fun AppDetailSheet(viewModel: MainViewModel) {
 
             if (!current.loaded) {
                 Spacer(Modifier.height(10.dp))
-                Text("Reading storage and live memory…", style = EyebrowStyle, color = Panel.TextFaint)
+                Text("Reading storage and live memory…", style = MetaStyle, color = Panel.TextFaint)
             }
         }
     }

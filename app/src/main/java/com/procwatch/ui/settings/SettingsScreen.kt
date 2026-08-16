@@ -34,6 +34,7 @@ import com.procwatch.ui.components.ReadoutRow
 import com.procwatch.ui.components.StatusChip
 import com.procwatch.ui.theme.DataStyle
 import com.procwatch.ui.theme.EyebrowStyle
+import com.procwatch.ui.theme.MetaStyle
 import com.procwatch.ui.theme.Panel
 
 @Composable
@@ -145,7 +146,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
 
                         ShizukuStatus.NOT_INSTALLED -> Text(
                             "Install Shizuku, then come back here.",
-                            style = EyebrowStyle,
+                            style = MetaStyle,
                             color = Panel.TextFaint
                         )
 
@@ -208,7 +209,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                                     )
                                     Text(
                                         row.packageName,
-                                        style = EyebrowStyle,
+                                        style = MetaStyle,
                                         color = Panel.TextFaint,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
@@ -251,25 +252,25 @@ fun SettingsScreen(viewModel: MainViewModel) {
                                 Row {
                                     Text(
                                         Format.timeOnly(entry.timestamp),
-                                        style = EyebrowStyle,
+                                        style = MetaStyle,
                                         color = Panel.TextFaint
                                     )
                                     Spacer(Modifier.width(8.dp))
                                     Text(
                                         entry.action,
-                                        style = EyebrowStyle,
+                                        style = MetaStyle,
                                         color = if (entry.success) Panel.Good else Panel.Danger
                                     )
                                     Spacer(Modifier.width(8.dp))
                                     Text(
                                         entry.method,
-                                        style = EyebrowStyle,
+                                        style = MetaStyle,
                                         color = Panel.TextFaint
                                     )
                                 }
                                 Text(
                                     entry.packageName,
-                                    style = EyebrowStyle,
+                                    style = MetaStyle,
                                     color = Panel.TextSecondary,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
@@ -277,7 +278,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                                 entry.detail?.let {
                                     Text(
                                         it,
-                                        style = EyebrowStyle,
+                                        style = MetaStyle,
                                         color = Panel.Danger,
                                         maxLines = 2,
                                         overflow = TextOverflow.Ellipsis
