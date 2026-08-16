@@ -32,7 +32,7 @@ Without Shizuku the only kill available is `killBackgroundProcesses()`, which re
 
 Needs **JDK 17** and the **Android 15 (API 35)** platform. Gradle 8.9 does not run on Java 23 or newer, so a very recent JDK on `PATH` will fail the build with an unhelpful message about class file versions — Android Studio sidesteps this by using its own bundled JDK.
 
-Open the folder in Android Studio (Ladybug or newer) and let it sync. That generates the Gradle wrapper and writes `local.properties`, neither of which is checked in. After that:
+The Gradle wrapper is checked in, so no separate Gradle install is needed — `gradlew` fetches its own. Open the folder in Android Studio (Ladybug or newer) and let it sync, which writes the `local.properties` that is not checked in. After that:
 
 ```bash
 ./gradlew test            # parser tests

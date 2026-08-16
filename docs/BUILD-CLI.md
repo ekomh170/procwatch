@@ -36,7 +36,7 @@ Pass `-SkipBuild` to set the toolchain up without building.
 | **platforms;android-35** | `compileSdk = 35`.                                                                                                                                                                                    |
 | **build-tools;35.0.0**   | aapt2, d8, zipalign, apksigner.                                                                                                                                                                       |
 | **platform-tools**       | `adb`, for installing over USB.                                                                                                                                                                       |
-| **Gradle 8.9**           | Needed once, only to generate the wrapper. After that `gradlew` fetches its own copy and the folder can be deleted.                                                                                   |
+| **Gradle 8.9**           | Only needed if `gradlew` is missing. It is checked in now, so the script downloads this as a fallback and the copy can be deleted afterwards.                                                         |
 
 ---
 
@@ -75,19 +75,17 @@ something to do, not a line to paste** — the downloads are manual.
        "platform-tools" "platforms;android-35" "build-tools;35.0.0"
    ```
 
-5. **Download Gradle 8.9** from
-   [services.gradle.org](https://services.gradle.org/distributions/gradle-8.9-bin.zip), extract
-   it, then from the project folder:
-
-   ```powershell
-   & "C:\gradle\gradle-8.9\bin\gradle.bat" wrapper --gradle-version 8.9
-   ```
-
-6. **Build:**
+5. **Build.** No Gradle install is needed — the wrapper is checked in and downloads the
+   version this project pins on first run:
 
    ```powershell
    .\gradlew.bat assembleDebug
    ```
+
+   Only if `gradlew.bat` is somehow missing: download
+   [Gradle 8.9](https://services.gradle.org/distributions/gradle-8.9-bin.zip), extract it, and
+   regenerate the wrapper with
+   `& "C:\gradle\gradle-8.9\bin\gradle.bat" wrapper --gradle-version 8.9`.
 
 Make `JAVA_HOME` and `ANDROID_HOME` permanent through **System Properties → Environment
 Variables**, or they vanish when the terminal closes.
