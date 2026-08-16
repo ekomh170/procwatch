@@ -42,6 +42,16 @@ and the one place where the phone's own light/dark setting still leaked into a d
 
 ### Fixed
 
+- **The launcher icon was clipped by circular masks.** The old mark's bottom bar reached
+  `x32,y81`, which is 34.8dp from the centre of the 108dp canvas — outside the 33dp radius every
+  launcher mask preserves, so a circular mask cut its corner. Artwork also sat low, centred on
+  y59.5 rather than 54, and 7dp bars thinned out at small render sizes. Replaced with the app's
+  own `SegmentMeter` turned upright: three columns of three 12dp cells on a 16dp pitch, spanning
+  32–76 on both axes, furthest corner 31.1dp from centre. Lit cells use `Panel.Signal` and unlit
+  use `Panel.BucketUnknown`, the same pair the app uses for a running versus an idle process.
+  Themed icons get their own drawable carrying only the lit cells — sharing the colour artwork
+  would have flattened the reading into one solid block under the system tint. (`99ca8b7`)
+
 - **The phone's light mode made the status bar icons disappear.** `enableEdgeToEdge()` with no
   arguments defaults to `SystemBarStyle.auto`, which reads `Configuration.UI_MODE_NIGHT_MASK` —
   the system dark mode setting, not the app's theme. ProcWatch is always dark, so launching it
