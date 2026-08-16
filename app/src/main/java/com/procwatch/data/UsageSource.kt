@@ -54,14 +54,22 @@ class UsageSource(private val context: Context) {
     /**
      * getAppStandbyBucket(String) is @SystemApi, not public SDK. The PACKAGE_USAGE_STATS
      * app-op is what the framework actually checks, and we hold it, so reflection through
-     * HiddenApiBypass gets us there. Returns null rather than throwing if a future Android
-     * closes this off.
+     * HiddenApiBypass gets us there.
+     *
+     * The lookup is cached because this is called once per installed package on every
+     * refresh — a few hundred times — and only the invoke has to be per-package.
      */
-    fun standbyBucket(packageName: String): Int? = runCatching {
-        val method = UsageStatsManager::class.java
-            .getMethod("getAppStandbyBucket", String::class.java)
-        method.invoke(usageStats, packageName) as? Int
-    }.getOrNull()
+    private val standbyBucketMethod by lazy {
+        runCatching {
+            UsageStatsManager::class.java.getMethod("getAppStandbyBucket", String::class.java)
+        }.getOrNull()
+    }
+
+    /** Null rather than throwing if a future Android closes this off. */
+    fun standbyBucket(packageName: String): Int? {
+        val method = standbyBucketMethod ?: return null
+        return runCatching { method.invoke(usageStats, packageName) as? Int }.getOrNull()
+    }
 
     suspend fun storageFor(packageName: String): StorageBreakdown? = withContext(Dispatchers.IO) {
         runCatching {
