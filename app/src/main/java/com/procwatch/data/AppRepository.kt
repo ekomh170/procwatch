@@ -12,6 +12,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /**
@@ -43,13 +45,19 @@ class AppRepository(
 
     private var metaCache: List<AppMeta>? = null
 
+    /**
+     * Serialises refreshes instead of dropping the ones that arrive while another is in
+     * flight. The refresh that follows a force stop is exactly the one that used to be
+     * dropped, which left the list showing an app as still running.
+     */
+    private val refreshLock = Mutex()
+
     fun hasUsageAccess(): Boolean = usage.hasUsageAccess()
     fun capabilities(): Set<Capability> = router.activeCapabilities()
     fun activeControllerName(): String = router.activeName()
 
     /** @param reloadPackages set true after an install/uninstall; the table is cached otherwise. */
-    suspend fun refresh(reloadPackages: Boolean = false) {
-        if (_isRefreshing.value) return
+    suspend fun refresh(reloadPackages: Boolean = false) = refreshLock.withLock {
         _isRefreshing.value = true
         try {
             _stats.value = systemStats.read()
