@@ -20,11 +20,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.procwatch.ui.theme.DataStyle
 import com.procwatch.ui.theme.EyebrowStyle
 import com.procwatch.ui.theme.Panel
 import kotlin.math.ceil
+import kotlin.math.roundToInt
 
 /**
  * The signature element: a segmented load meter, drawn like the LED ladder on a rack unit
@@ -37,10 +40,16 @@ fun SegmentMeter(
     modifier: Modifier = Modifier,
     segments: Int = 28,
     activeColor: Color = Panel.Signal,
-    height: androidx.compose.ui.unit.Dp = 14.dp
+    height: androidx.compose.ui.unit.Dp = 14.dp,
+    label: String? = null
 ) {
     val safe = fraction.coerceIn(0f, 1f)
-    Canvas(modifier = modifier.fillMaxWidth().height(height)) {
+    // A bare Canvas is invisible to TalkBack, so the reading has to be stated. Callers that
+    // already put the same number in adjacent text can leave the label null.
+    val described = label?.let { text ->
+        modifier.semantics { contentDescription = "$text, ${(safe * 100).roundToInt()} percent" }
+    } ?: modifier
+    Canvas(modifier = described.fillMaxWidth().height(height)) {
         val gap = 2.dp.toPx()
         val cellWidth = (size.width - gap * (segments - 1)) / segments
         val lit = ceil(safe * segments).toInt()

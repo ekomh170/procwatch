@@ -93,7 +93,8 @@ fun DashboardScreen(viewModel: MainViewModel, onOpenApps: () -> Unit) {
                     Spacer(Modifier.height(12.dp))
                     SegmentMeter(
                         fraction = stats.ramFraction,
-                        activeColor = if (stats.lowMemory) Panel.Danger else Panel.Signal
+                        activeColor = if (stats.lowMemory) Panel.Danger else Panel.Signal,
+                        label = "Memory in use"
                     )
                     Spacer(Modifier.height(12.dp))
                     ReadoutRow("Available", Format.kb(stats.availRamKb))
