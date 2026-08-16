@@ -11,6 +11,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.procwatch.core.Bucket
 
 /**
  * The visual reference is a rack-mounted monitoring panel, not a phone settings screen:
@@ -47,11 +48,11 @@ object Panel {
 }
 
 fun bucketColor(bucket: Int?): Color = when (bucket) {
-    10 -> Panel.BucketActive
-    20 -> Panel.BucketWorking
-    30 -> Panel.BucketFrequent
-    40 -> Panel.BucketRare
-    45 -> Panel.BucketRestricted
+    Bucket.ACTIVE -> Panel.BucketActive
+    Bucket.WORKING_SET -> Panel.BucketWorking
+    Bucket.FREQUENT -> Panel.BucketFrequent
+    Bucket.RARE -> Panel.BucketRare
+    Bucket.RESTRICTED -> Panel.BucketRestricted
     else -> Panel.BucketUnknown
 }
 
