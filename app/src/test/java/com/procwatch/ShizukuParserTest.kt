@@ -2,6 +2,7 @@ package com.procwatch
 
 import com.procwatch.privileged.ShizukuAppController
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -55,6 +56,23 @@ Total PSS by OOM adjustment:
     @Test
     fun `returns nothing when the section is missing`() {
         assertTrue(ShizukuAppController.parseMeminfo("unexpected output").isEmpty())
+    }
+
+    @Test
+    fun `sums every total pss block for a multi-process app`() {
+        val twoProcesses = """
+** MEMINFO in pid 4321 [com.whatsapp] **
+                 TOTAL PSS:    98,120            TOTAL RSS:   180,004
+
+** MEMINFO in pid 4400 [com.whatsapp:push] **
+                 TOTAL PSS:    24,880            TOTAL RSS:    61,220
+""".trimIndent()
+        assertEquals(123_000L, ShizukuAppController.parseTotalPss(twoProcesses))
+    }
+
+    @Test
+    fun `total pss is null when the app is not running`() {
+        assertNull(ShizukuAppController.parseTotalPss("No process found for: com.foo"))
     }
 
     @Test

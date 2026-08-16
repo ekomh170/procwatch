@@ -53,12 +53,11 @@ class ShizukuAppController(private val shizuku: ShizukuManager) : AppController 
         runShell("cmd appops set ${packageName.shellSafe()} RUN_ANY_IN_BACKGROUND ignore")
 
     override suspend fun processMemory(packageName: String): Result<Long> {
+        if (!isAvailable()) return Result.failure(UnsupportedByController(name, "read per-app memory"))
         val result = ShizukuShell.run("dumpsys meminfo ${packageName.shellSafe()}")
         if (!result.ok) return Result.failure(Exception(result.output.take(200)))
-        val match = TOTAL_PSS.find(result.output)
+        val kb = parseTotalPss(result.output)
             ?: return Result.failure(Exception("No TOTAL PSS line for $packageName"))
-        val kb = match.groupValues[1].replace(",", "").toLongOrNull()
-            ?: return Result.failure(Exception("Unparsable PSS value"))
         return Result.success(kb)
     }
 
@@ -91,6 +90,19 @@ class ShizukuAppController(private val shizuku: ShizukuManager) : AppController 
                 val pid = m.groupValues[3].toIntOrNull() ?: return@mapNotNull null
                 ProcessInfo(pid = pid, name = m.groupValues[2], pssKb = kb)
             }.toList()
+        }
+
+        /**
+         * `dumpsys meminfo <pkg>` prints one App Summary block per process, so a
+         * multi-process app has several TOTAL PSS lines. They are summed to match what the
+         * app list shows for the same package; taking the first would undercount an app
+         * that runs a `:remote` or `:push` process.
+         */
+        fun parseTotalPss(output: String): Long? {
+            val values = TOTAL_PSS.findAll(output)
+                .mapNotNull { it.groupValues[1].replace(",", "").toLongOrNull() }
+                .toList()
+            return if (values.isEmpty()) null else values.sum()
         }
 
         fun parsePs(output: String): List<ProcessInfo> =
