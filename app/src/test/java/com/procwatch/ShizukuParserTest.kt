@@ -58,6 +58,53 @@ Total PSS by OOM adjustment:
         assertTrue(ShizukuAppController.parseMeminfo("unexpected output").isEmpty())
     }
 
+    /**
+     * Section order captured from a real Poco X6 on HyperOS / Android 14. The RSS sections
+     * come *first* there, which the earlier synthetic sample never exercised: a parser that
+     * looked for "Total ... by process:" loosely, or that started from the top of the output,
+     * would report RSS figures as if they were PSS and overstate every app.
+     *
+     * Package names are anonymised on purpose — this repository is public and the real dump
+     * lists everything installed on the device.
+     */
+    private val hyperOsSample = """
+Applications Memory Usage (in Kilobytes):
+Uptime: 62758541 Realtime: 71813337
+
+Total RSS by process:
+    715,852K: system (pid 2837)
+    548,592K: com.example.messenger (pid 12226 / activities)
+    414,076K: com.android.systemui (pid 4540)
+
+Total RSS by OOM adjustment:
+    1,678,520K: Native
+
+Total RSS by category:
+    1,678,520K: Native
+
+Total PSS by process:
+    580,137K: system (pid 2837)
+    393,662K: com.example.launcher (pid 4083 / activities)
+    258,043K: com.example.messenger (pid 12226 / activities)
+
+Total PSS by OOM adjustment:
+    1,231,842K: Native
+
+Total PSS by category:
+    1,231,842K: Native
+""".trimIndent()
+
+    @Test
+    fun `reads the pss section when rss sections come first`() {
+        val processes = ShizukuAppController.parseMeminfo(hyperOsSample)
+
+        // Three PSS rows, and none of the RSS figures.
+        assertEquals(3, processes.size)
+        assertEquals(listOf(580_137L, 393_662L, 258_043L), processes.map { it.pssKb })
+        assertTrue(processes.none { it.pssKb == 715_852L })
+        assertTrue(processes.none { it.name == "Native" })
+    }
+
     @Test
     fun `sums every total pss block for a multi-process app`() {
         val twoProcesses = """
