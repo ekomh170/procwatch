@@ -155,27 +155,34 @@ and the one place where the phone's own light/dark setting still leaked into a d
 
 ### Verification status
 
-**Not yet compiled or tested.** These changes were reviewed by hand on a machine with no Gradle,
-no Android SDK, no Gradle wrapper, and a JDK too new for Gradle 8.9 to run on. Before trusting
-any of it on the phone, open the project in Android Studio to generate the wrapper and
-`local.properties`, then:
+**Compiles clean, all tests pass.** Everything above was written and reviewed on a machine with
+no toolchain at all, so it went a long stretch unverified. That is now resolved:
 
-```bash
-./gradlew test           # 8 parser tests, 3 of them new
-./gradlew assembleDebug
+```
+./gradlew test           →  8 tests, 0 failures, 0 errors
+./gradlew assembleDebug  →  BUILD SUCCESSFUL, no warnings
 ```
 
-Expect the first compile to surface errors. The likeliest candidates are the new imports
-(`SystemBarStyle`, `MetaStyle`) and `refresh()`, described below.
+Nothing in the batch failed to compile — not `refresh()` as an expression body over
+`Mutex.withLock`, not the new `SystemBarStyle` or `MetaStyle` imports, not the signing config.
+The three new parser cases all pass, including the multi-process PSS sum and the
+repeated-summary guard.
 
-The likeliest thing to catch: `refresh()` is now an expression body
-(`= refreshLock.withLock { … }`), the only structural change to a function signature.
+One warning did surface and was fixed: `Icons.Filled.List` is deprecated in favour of the
+auto-mirrored variant, which matters because the manifest sets `supportsRtl="true"`.
 
-The contrast figures above were computed from the WCAG relative-luminance formula, not sampled
-from a screenshot. They hold for text on `Surface` and `Background`; disabled controls draw
-`TextFaint` on `SurfaceRaised` at 4.1:1, which is exempt from the requirement but still an
-improvement on the 2.6:1 it was. Layout changes from the larger type and the 48dp floors have
-not been seen on a real screen yet.
+**Still unverified: how any of it looks and behaves on the phone.** A clean compile says nothing
+about the visual result. Specifically outstanding —
+
+- Layout consequences of 12sp `MetaStyle` and the 48dp touch-target floors. Rows are taller than
+  they were; that has not been seen on a real screen.
+- The status bar icon fix, which only shows itself when the phone is in light mode.
+- The launcher icon under HyperOS's actual mask and anti-aliasing. The published preview renders
+  the same path data as SVG, so the geometry is right, but it is not a screenshot from Android.
+- Contrast figures were computed from the WCAG relative-luminance formula rather than sampled
+  from a screenshot. They hold for text on `Surface` and `Background`; disabled controls draw
+  `TextFaint` on `SurfaceRaised` at 4.1:1, exempt from the requirement but still better than the
+  2.6:1 it was.
 
 The `dumpsys` samples in `ShizukuParserTest` are still synthetic. Once Shizuku is connected,
 `adb shell dumpsys meminfo <multi-process-pkg>` on the real device is the fastest way to confirm
