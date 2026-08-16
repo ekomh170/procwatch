@@ -1,0 +1,102 @@
+# ProcWatch
+
+Background app monitor and manager for Android. Built to be sideloaded onto one phone — yours — not published.
+
+Target device: **Poco X6 (HyperOS / Android 14)**. `minSdk 29`, `targetSdk 35`.
+
+---
+
+## What it actually does
+
+Android does not let a normal app see other apps' processes. `getRunningAppProcesses()`, `getRunningServices()` and `/proc` were all closed off years ago. So ProcWatch is built in tiers, and it tells you which tier you are on instead of pretending.
+
+| | No permissions | + Usage Access | + Shizuku |
+|---|:---:|:---:|:---:|
+| Installed app list | ✅ | ✅ | ✅ |
+| Screen time, last used | ❌ | ✅ | ✅ |
+| Standby bucket | ❌ | ✅ | ✅ |
+| Storage breakdown | ❌ | ✅ | ✅ |
+| **Live process list** | ❌ | ❌ | ✅ |
+| **Per-app memory (PSS)** | ❌ | ❌ | ✅ |
+| **Real force stop** | ❌ | ❌ | ✅ |
+| Freeze / unfreeze app | ❌ | ❌ | ✅ |
+| Block background execution | ❌ | ❌ | ✅ |
+
+Without Shizuku the only kill available is `killBackgroundProcesses()`, which reclaims cached processes and nothing else — the app comes straight back. The UI calls that controller "Soft kill" rather than dressing it up as a force stop.
+
+**No network.** `android.permission.INTERNET` is deliberately absent from the manifest. Nothing this app reads can leave the phone.
+
+---
+
+## Build
+
+```bash
+# Open the folder in Android Studio (Ladybug or newer) and let it sync,
+# or from the command line once the wrapper exists:
+gradle wrapper --gradle-version 8.9
+./gradlew assembleDebug
+./gradlew installDebug
+```
+
+The Gradle wrapper JAR is not checked in. Android Studio regenerates it on first sync; `gradle wrapper` does the same if you have Gradle installed.
+
+Run the parser tests with `./gradlew test`.
+
+---
+
+## Setup on the phone
+
+**1. Usage Access** — Setup tab → Open Settings → find ProcWatch → allow. This one is worth doing even if you skip Shizuku.
+
+**2. Shizuku** — install it, then:
+
+- Settings → About phone → tap Build number 7 times
+- Developer options → enable **USB debugging** *and* **USB debugging (Security settings)** (Xiaomi splits these)
+- Developer options → enable **Wireless debugging**
+- Open Shizuku → Start via Wireless debugging → pair with the code
+- Back in ProcWatch: Setup tab → Authorise ProcWatch
+
+Shizuku's service dies on every reboot unless the phone is rooted. ProcWatch detects this and drops to the lower tier instead of breaking; the Setup tab tells you what to do.
+
+If pairing fails on HyperOS, check Settings → Security → **Secure app spawning** and turn it off.
+
+---
+
+## Layout
+
+```
+core/         Models and formatting. No Android dependencies beyond the SDK.
+privileged/   AppController interface + Shizuku and fallback implementations.
+              CapabilityRouter picks the strongest one that is alive right now.
+data/         Data sources (packages, usage, system stats), whitelist, action log,
+              and the repository that joins them.
+ui/           Compose screens. One MainViewModel backs all three tabs.
+```
+
+The important seam is `privileged/AppController.kt`. Nothing outside that package knows Shizuku exists. Adding a root backend later means writing one more implementation and adding it to the list in `AppContainer` — nothing else changes.
+
+`ShizukuShell` reaches `Shizuku.newProcess` by reflection because the client library marks it `@RestrictTo`. If a future Shizuku release renames it, that one file is the only thing to fix.
+
+---
+
+## Deliberate simplifications
+
+These are choices, not oversights — each one is a place to grow into.
+
+- **No Hilt.** One object graph, no variants. `AppContainer` is 30 lines instead of an annotation processor.
+- **No Room.** The persistent state is a whitelist and a capped action log. SharedPreferences plus JSON, no KSP in the build.
+- **One ViewModel for three tabs.** They read the same repository and the same privilege state. The tab boundary is the seam to cut along if this grows.
+- **`dumpsys meminfo`, not `ps`.** PSS reflects an app's actual memory cost; RSS double-counts shared pages across every process that maps them.
+
+## Not built yet
+
+- Automatic sweeps on screen off (needs a foreground service with `specialUse` type and an OEM battery-exemption dance)
+- Usage history and charts (needs periodic snapshots via WorkManager and somewhere to put them — that is where Room earns its place)
+- Rules engine, widget, quick settings tile
+- Per-app network usage via `NetworkStatsManager`
+
+## Known rough edges
+
+- `dumpsys` output format is not a stable API. `ShizukuParserTest` pins the current shape; when an OS update breaks it, capture real output with `adb shell dumpsys meminfo` and fix the regex against it.
+- HyperOS runs its own aggressive background management and may kill ProcWatch itself. Set its battery restriction to "No restrictions" and enable Autostart in the Security app.
+- Force-stopped apps send no notifications until opened by hand. The keep-running list is seeded on first launch with your dialer, SMS app, keyboard, launcher and clock — check it before running a sweep.
