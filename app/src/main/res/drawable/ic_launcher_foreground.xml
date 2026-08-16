@@ -3,9 +3,32 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- A rack meter: four stacked bars of decreasing load. -->
-    <path android:fillColor="#FFB454" android:pathData="M32,38h44v7h-44z" />
-    <path android:fillColor="#FFB454" android:pathData="M32,50h32v7h-32z" />
-    <path android:fillColor="#5C6673" android:pathData="M32,62h22v7h-22z" />
-    <path android:fillColor="#5C6673" android:pathData="M32,74h12v7h-12z" />
+
+    <!--
+        A segmented load meter: the app's own SegmentMeter, turned upright.
+
+        Three columns of three cells on a 12dp grid with 4dp gutters, occupying x and y 32..76.
+        That is a 44dp square centred on the 108dp viewport, so its furthest corner sits 31.1dp
+        from centre — inside the 33dp radius that every launcher mask is guaranteed to keep.
+        Nothing here can be clipped into a circle, a squircle or a rounded square.
+
+        Cells are square-cornered on purpose. The meter in Panels.kt draws plain rects too;
+        rounded LEDs would soften the one thing the whole interface is styled around.
+
+        Lit cells are Panel.Signal, unlit are Panel.BucketUnknown — the same pair the app uses
+        for a running versus an idle process, so the icon states what the app is for: one
+        package holding memory while its neighbours sit still.
+    -->
+
+    <!-- Unlit cells first, so the lit ones read as sitting on top of the ladder. -->
+    <path
+        android:fillColor="#39424E"
+        android:pathData="M32,32h12v12h-12z M32,48h12v12h-12z M64,32h12v12h-12z" />
+
+    <!-- Lit: 1, 3 and 2 cells. A spike in the middle column rather than a rising staircase,
+         which would read as a signal-strength indicator. -->
+    <path
+        android:fillColor="#FFB454"
+        android:pathData="M32,64h12v12h-12z M48,32h12v12h-12z M48,48h12v12h-12z M48,64h12v12h-12z M64,48h12v12h-12z M64,64h12v12h-12z" />
+
 </vector>
