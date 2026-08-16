@@ -40,6 +40,8 @@ Open the folder in Android Studio (Ladybug or newer) and let it sync. That gener
 ./gradlew installDebug
 ```
 
+**No Android Studio?** `.\tools\setup-build-env.ps1` downloads JDK 17, the SDK command-line tools and Gradle into one folder under `%LOCALAPPDATA%`, wires them up and builds. Nothing system-wide, no administrator rights. See [docs/BUILD-CLI.md](docs/BUILD-CLI.md) for that route and the manual equivalent.
+
 ### Signing a release build
 
 Debug builds are signed automatically with Gradle's debug key and install as `com.procwatch.debug`. A release build needs your own key, or `assembleRelease` produces an unsigned APK that Android refuses to install.
@@ -89,6 +91,8 @@ data/         Data sources (packages, usage, system stats), whitelist, action lo
 ui/           Compose screens. One MainViewModel backs all three tabs.
 docs/         KONSEP.md is the design document this was built from (Indonesian).
               CHANGELOG.md records what changed since, and why.
+              BUILD-CLI.md covers building without the IDE.
+tools/        setup-build-env.ps1 fetches the whole toolchain into one folder.
 ```
 
 The important seam is `privileged/AppController.kt`. Nothing outside that package knows Shizuku exists. Adding a root backend later means writing one more implementation and adding it to the list in `AppContainer` — nothing else changes.
