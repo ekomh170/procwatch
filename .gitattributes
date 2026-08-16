@@ -1,0 +1,11 @@
+# Keep LF in the repository regardless of the checkout platform, so a Windows
+# clone and a CI checkout produce identical blobs.
+* text=auto eol=lf
+
+# Binary: never touch.
+*.png binary
+*.jpg binary
+*.webp binary
+*.zip binary
+*.jar binary
+*.keystore binary
