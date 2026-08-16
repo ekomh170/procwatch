@@ -226,7 +226,7 @@ fun AppDetailSheet(viewModel: MainViewModel) {
 
             if (!current.loaded) {
                 Spacer(Modifier.height(10.dp))
-                Text("Reading process table…", style = EyebrowStyle, color = Panel.TextFaint)
+                Text("Reading storage and live memory…", style = EyebrowStyle, color = Panel.TextFaint)
             }
         }
     }

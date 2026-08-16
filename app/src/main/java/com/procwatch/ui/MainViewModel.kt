@@ -129,11 +129,19 @@ class MainViewModel(private val container: AppContainer) : ViewModel() {
             _selected.value = null
             return
         }
-        _detail.value = AppDetail(row = row)
+        // Processes come straight from the last refresh, so the sheet opens populated.
+        // Only storage and the fresh memory reading have to be waited on.
+        val processes = repo.processesFor(packageName)
+        _detail.value = AppDetail(row = row, processes = processes)
         viewModelScope.launch {
-            val processes = repo.processesFor(packageName)
             val storage = repo.storageFor(packageName)
-            _detail.value = AppDetail(row = row, processes = processes, storage = storage, loaded = true)
+            val livePss = repo.memoryFor(packageName)
+            _detail.value = AppDetail(
+                row = if (livePss != null) row.copy(pssKb = livePss) else row,
+                processes = processes,
+                storage = storage,
+                loaded = true
+            )
         }
     }
 

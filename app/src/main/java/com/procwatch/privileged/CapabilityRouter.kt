@@ -25,6 +25,10 @@ class CapabilityRouter(private val controllers: List<AppController>) {
         controllerFor(Capability.LIST_PROCESSES)?.listProcesses()
             ?: Result.failure(UnsupportedByController("No controller", "list processes"))
 
+    suspend fun processMemory(packageName: String): Result<Long> =
+        controllerFor(Capability.PER_APP_MEMORY)?.processMemory(packageName)
+            ?: Result.failure(UnsupportedByController("No controller", "read per-app memory"))
+
     /** Returns the controller name alongside the outcome so the action log stays honest. */
     suspend fun forceStop(packageName: String): Pair<String, Result<Unit>> {
         val controller = controllerFor(Capability.FORCE_STOP)

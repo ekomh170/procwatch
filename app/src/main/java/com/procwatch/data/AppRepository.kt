@@ -45,6 +45,9 @@ class AppRepository(
 
     private var metaCache: List<AppMeta>? = null
 
+    /** Last process table read. Serves the detail sheet without a second shell call. */
+    private var processCache: List<ProcessInfo> = emptyList()
+
     /**
      * Serialises refreshes instead of dropping the ones that arrive while another is in
      * flight. The refresh that follows a force stop is exactly the one that used to be
@@ -82,6 +85,7 @@ class AppRepository(
                 emptyList()
             }
 
+            processCache = processes
             val byPackage = processes.groupBy { it.owningPackage }
             val whitelist = settings.whitelist.value
 
@@ -119,10 +123,21 @@ class AppRepository(
         _rows.value = _rows.value.map { it.copy(isWhitelisted = it.packageName in whitelist) }
     }
 
-    suspend fun processesFor(packageName: String): List<ProcessInfo> {
-        if (!router.has(Capability.LIST_PROCESSES)) return emptyList()
-        return router.listProcesses().getOrDefault(emptyList())
-            .filter { it.owningPackage == packageName }
+    /**
+     * Served from the last refresh rather than re-reading the table. Opening a detail sheet
+     * used to run a system-wide `dumpsys meminfo` and throw away every row but one.
+     */
+    fun processesFor(packageName: String): List<ProcessInfo> =
+        processCache.filter { it.owningPackage == packageName }
+
+    /**
+     * A fresh reading for one package, which is a far cheaper shell call than the global
+     * dump. Null when no controller can read per-app memory, so the caller keeps whatever
+     * the last refresh found instead of showing a hole.
+     */
+    suspend fun memoryFor(packageName: String): Long? {
+        if (!router.has(Capability.PER_APP_MEMORY)) return null
+        return router.processMemory(packageName).getOrNull()
     }
 
     suspend fun storageFor(packageName: String): StorageBreakdown? = usage.storageFor(packageName)
