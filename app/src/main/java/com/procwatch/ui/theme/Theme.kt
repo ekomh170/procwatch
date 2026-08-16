@@ -27,7 +27,14 @@ object Panel {
 
     val TextPrimary = Color(0xFFE6EDF3)
     val TextSecondary = Color(0xFF8B98A5)
-    val TextFaint = Color(0xFF5C6673)
+
+    /**
+     * The dimmest text the palette allows. #5C6673 looked right but measured 3.0:1 against
+     * Surface — below the 4.5:1 WCAG AA needs for body text, and it carries the app list's
+     * second line, package names and log timestamps. This value measures 4.6:1 on Surface
+     * and 5.0:1 on Background while keeping the same cool grey cast.
+     */
+    val TextFaint = Color(0xFF7A8593)
 
     /** The single accent. Used for live values and the primary action, nothing else. */
     val Signal = Color(0xFFFFB454)
@@ -42,7 +49,6 @@ object Panel {
     val BucketRestricted = Color(0xFFD16B6B)
     val BucketUnknown = Color(0xFF39424E)
 
-    val RowHeight = 62.dp
     val RailWidth = 3.dp
     val Radius = 4.dp
 }
@@ -85,12 +91,30 @@ val DataStyleLarge = TextStyle(
     fontWeight = FontWeight.Medium
 )
 
-/** Section eyebrows. Wide tracking, always upper case at the call site. */
+/**
+ * Section eyebrows, chips and status badges. Wide tracking, always upper case at the call
+ * site, and never more than a couple of words — 11sp matches the smallest role in the M3
+ * type scale, which is the floor for a label of this kind.
+ */
 val EyebrowStyle = TextStyle(
     fontFamily = FontFamily.Monospace,
-    fontSize = 10.sp,
+    fontSize = 11.sp,
     fontWeight = FontWeight.Medium,
     letterSpacing = 1.4.sp
+)
+
+/**
+ * Secondary content that is read rather than glanced at: package names, timestamps, the
+ * second line of a list row, log entries, process tables.
+ *
+ * This used to borrow EyebrowStyle at 10sp, which put sentence-length text below the
+ * readable floor and paired it with the dimmest colour in the palette. Eyebrow tracking is
+ * dropped too — letter spacing helps a one-word label and hurts anything longer.
+ */
+val MetaStyle = TextStyle(
+    fontFamily = FontFamily.Monospace,
+    fontSize = 12.sp,
+    fontWeight = FontWeight.Normal
 )
 
 private val typography = Typography(
@@ -98,6 +122,7 @@ private val typography = Typography(
     titleMedium = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
     bodyMedium = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Normal),
     bodySmall = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Normal),
+    labelMedium = MetaStyle,
     labelSmall = EyebrowStyle
 )
 
