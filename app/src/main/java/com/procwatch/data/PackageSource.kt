@@ -33,6 +33,4 @@ class PackageSource(private val context: Context) {
             )
         }.sortedBy { it.label.lowercase() }
     }
-
-    fun launchIntentFor(packageName: String) = pm.getLaunchIntentForPackage(packageName)
 }
