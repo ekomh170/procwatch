@@ -11,3 +11,8 @@ local.properties
 
 # Source snapshot archive, not a build input.
 /zip/
+
+# Release signing. The .example template is committed; these never are.
+/keystore.properties
+*.jks
+*.keystore

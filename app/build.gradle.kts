@@ -1,8 +1,26 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
+
+/**
+ * Release signing is read from keystore.properties in the project root, which is gitignored
+ * along with the keystore itself. Nothing secret ever reaches the repository.
+ *
+ * When the file is absent — a fresh clone, or a machine that only builds debug — the release
+ * signing config is simply not created and `assembleRelease` produces an unsigned APK, exactly
+ * as it did before. Debug builds are unaffected; Gradle signs those with its own debug key.
+ *
+ * See keystore.properties.example for the four keys this expects.
+ */
+val keystoreFile = rootProject.file("keystore.properties")
+val keystore = Properties().apply {
+    if (keystoreFile.exists()) keystoreFile.inputStream().use { load(it) }
+}
+val hasReleaseKeystore = keystore.getProperty("storeFile") != null
 
 android {
     namespace = "com.procwatch"
@@ -16,12 +34,34 @@ android {
         versionName = "0.1.0"
     }
 
+    signingConfigs {
+        if (hasReleaseKeystore) {
+            create("release") {
+                storeFile = rootProject.file(keystore.getProperty("storeFile"))
+                storePassword = keystore.getProperty("storePassword")
+                keyAlias = keystore.getProperty("keyAlias")
+                keyPassword = keystore.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            // R8 stays off. The privileged paths reach Shizuku.newProcess and
+            // getAppStandbyBucket by reflection, which static analysis cannot follow, and a
+            // sideloaded personal build gains nothing from a smaller APK that is worth the
+            // risk of a silently stripped method.
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // Null when keystore.properties is absent, which leaves the APK unsigned rather
+            // than failing the build with a confusing message about a missing store file.
+            signingConfig = signingConfigs.findByName("release")
         }
         debug {
+            // Keeps a debug install alongside a release one. Note that this makes it a
+            // different package: Shizuku authorises per package, and the whitelist and action
+            // log live in that package's SharedPreferences, so the two builds do not share
+            // either. Pick one for daily use.
             applicationIdSuffix = ".debug"
         }
     }

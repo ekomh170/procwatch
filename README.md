@@ -30,17 +30,33 @@ Without Shizuku the only kill available is `killBackgroundProcesses()`, which re
 
 ## Build
 
+Needs **JDK 17** and the **Android 15 (API 35)** platform. Gradle 8.9 does not run on Java 23 or newer, so a very recent JDK on `PATH` will fail the build with an unhelpful message about class file versions — Android Studio sidesteps this by using its own bundled JDK.
+
+Open the folder in Android Studio (Ladybug or newer) and let it sync. That generates the Gradle wrapper and writes `local.properties`, neither of which is checked in. After that:
+
 ```bash
-# Open the folder in Android Studio (Ladybug or newer) and let it sync,
-# or from the command line once the wrapper exists:
-gradle wrapper --gradle-version 8.9
-./gradlew assembleDebug
+./gradlew test            # parser tests
+./gradlew assembleDebug   # app/build/outputs/apk/debug/
 ./gradlew installDebug
 ```
 
-The Gradle wrapper JAR is not checked in. Android Studio regenerates it on first sync; `gradle wrapper` does the same if you have Gradle installed.
+### Signing a release build
 
-Run the parser tests with `./gradlew test`.
+Debug builds are signed automatically with Gradle's debug key and install as `com.procwatch.debug`. A release build needs your own key, or `assembleRelease` produces an unsigned APK that Android refuses to install.
+
+```bash
+keytool -genkeypair -v -keystore procwatch-release.jks \
+  -alias procwatch -keyalg RSA -keysize 4096 -validity 10000
+
+cp keystore.properties.example keystore.properties   # then fill it in
+./gradlew assembleRelease
+```
+
+`keystore.properties` and `*.jks` are gitignored. Back both up: Android identifies an app by its signature, so losing the key means you can no longer update an installed ProcWatch in place — you would have to uninstall first, discarding the keep-running list and action log.
+
+Debug and release are **different packages**, so they do not share Shizuku authorisation or app data. Pick one for daily use rather than switching back and forth.
+
+R8 is deliberately off in release: the privileged paths reach `Shizuku.newProcess` and `getAppStandbyBucket` by reflection, which static analysis cannot follow, and a personal sideload gains nothing from a smaller APK worth that risk.
 
 ---
 
