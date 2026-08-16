@@ -21,8 +21,18 @@ class ActionLog(context: Context) {
     private val _entries = MutableStateFlow(read())
     val entries: StateFlow<List<ActionRecord>> = _entries.asStateFlow()
 
-    fun record(record: ActionRecord) {
-        val next = (listOf(record) + _entries.value).take(MAX_ENTRIES)
+    fun record(record: ActionRecord) = recordAll(listOf(record))
+
+    /**
+     * One serialisation for a whole batch.
+     *
+     * A sweep stops dozens of apps in a row, and logging each one separately meant
+     * re-encoding the entire log — up to 300 entries — once per app, on the caller's
+     * thread. Callers pass records oldest-first; the log is newest-first.
+     */
+    fun recordAll(records: List<ActionRecord>) {
+        if (records.isEmpty()) return
+        val next = (records.asReversed() + _entries.value).take(MAX_ENTRIES)
         _entries.value = next
         persist(next)
     }

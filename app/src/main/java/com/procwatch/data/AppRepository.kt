@@ -123,18 +123,23 @@ class AppRepository(
         if (settings.isWhitelisted(packageName)) {
             return Result.failure(IllegalStateException("$packageName is whitelisted"))
         }
-        val (method, result) = router.forceStop(packageName)
-        actionLog.record(
-            ActionRecord(
-                timestamp = System.currentTimeMillis(),
-                packageName = packageName,
-                action = "Force stop",
-                method = method,
-                success = result.isSuccess,
-                detail = result.exceptionOrNull()?.message
-            )
-        )
+        val (record, result) = runForceStop(packageName)
+        actionLog.record(record)
         return result
+    }
+
+    /** Stops and builds the log entry, but does not write it — a sweep batches its own. */
+    private suspend fun runForceStop(packageName: String): Pair<ActionRecord, Result<Unit>> {
+        val (method, result) = router.forceStop(packageName)
+        val record = ActionRecord(
+            timestamp = System.currentTimeMillis(),
+            packageName = packageName,
+            action = "Force stop",
+            method = method,
+            success = result.isSuccess,
+            detail = result.exceptionOrNull()?.message
+        )
+        return record to result
     }
 
     suspend fun setEnabled(packageName: String, enabled: Boolean): Result<Unit> {
@@ -174,14 +179,21 @@ class AppRepository(
      * which is a separate piece of work.
      */
     suspend fun hibernateAll(onProgress: (done: Int, total: Int) -> Unit = { _, _ -> }): HibernateOutcome {
-        val targets = _rows.value.filter { it.isRunning && !it.isWhitelisted && !it.meta.isSystem }
+        // The whitelist is read live rather than from the row snapshot, so a package
+        // protected since the last refresh is still skipped.
+        val targets = _rows.value.filter {
+            it.isRunning && !it.meta.isSystem && !settings.isWhitelisted(it.packageName)
+        }
+        val records = ArrayList<ActionRecord>(targets.size)
         var stopped = 0
         var failed = 0
         targets.forEachIndexed { index, row ->
-            val result = forceStop(row.packageName)
+            val (record, result) = runForceStop(row.packageName)
+            records += record
             if (result.isSuccess) stopped++ else failed++
             onProgress(index + 1, targets.size)
         }
+        actionLog.recordAll(records)
         refresh()
         return HibernateOutcome(stopped, failed)
     }
