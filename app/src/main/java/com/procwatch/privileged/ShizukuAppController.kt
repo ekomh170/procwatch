@@ -92,16 +92,27 @@ class ShizukuAppController(private val shizuku: ShizukuManager) : AppController 
             }.toList()
         }
 
+        private const val PROCESS_HEADER = "** MEMINFO in pid"
+
         /**
-         * `dumpsys meminfo <pkg>` prints one App Summary block per process, so a
-         * multi-process app has several TOTAL PSS lines. They are summed to match what the
-         * app list shows for the same package; taking the first would undercount an app
-         * that runs a `:remote` or `:push` process.
+         * `dumpsys meminfo <pkg>` prints one block per process, so a multi-process app has
+         * several TOTAL PSS figures. They are summed to match what the app list shows for
+         * the same package; taking the first would undercount an app running a `:remote`
+         * or `:push` process.
+         *
+         * The output is split per process block and only the first figure in each is taken,
+         * so a build that prints the summary more than once per block cannot double-count.
+         * If the header is absent the whole output is treated as a single block.
          */
         fun parseTotalPss(output: String): Long? {
-            val values = TOTAL_PSS.findAll(output)
-                .mapNotNull { it.groupValues[1].replace(",", "").toLongOrNull() }
-                .toList()
+            val blocks = if (output.contains(PROCESS_HEADER)) {
+                output.split(PROCESS_HEADER).drop(1)
+            } else {
+                listOf(output)
+            }
+            val values = blocks.mapNotNull { block ->
+                TOTAL_PSS.find(block)?.groupValues?.get(1)?.replace(",", "")?.toLongOrNull()
+            }
             return if (values.isEmpty()) null else values.sum()
         }
 

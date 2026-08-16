@@ -71,6 +71,19 @@ Total PSS by OOM adjustment:
     }
 
     @Test
+    fun `counts the summary once when a block repeats it`() {
+        // Some builds print the figure in the table footer and again in App Summary.
+        val repeatedWithinOneBlock = """
+** MEMINFO in pid 4321 [com.whatsapp] **
+                 TOTAL PSS:    98,120            TOTAL RSS:   180,004
+
+ App Summary
+                TOTAL PSS:    98,120            TOTAL RSS:   180,004
+""".trimIndent()
+        assertEquals(98_120L, ShizukuAppController.parseTotalPss(repeatedWithinOneBlock))
+    }
+
+    @Test
     fun `total pss is null when the app is not running`() {
         assertNull(ShizukuAppController.parseTotalPss("No process found for: com.foo"))
     }
